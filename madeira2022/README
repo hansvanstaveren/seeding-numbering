@@ -1,0 +1,4 @@
+- Do not forget to use ../seeding2, which is the wheel-chair version
+- ../seeding2 now splits the output into groups already, the scripts here (postsplit for example) have not been updated for that yet
+- The sort -R is a sort shuffle
+- postsplit script is edited afterwards, not the one run in 2022
