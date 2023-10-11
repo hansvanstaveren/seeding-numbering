@@ -417,19 +417,28 @@ output_groups()
     int g, p;
     gr_p grp;
     pr_p prp;
+    FILE *outf;
+    char fname[200];
+    int numberlen;
+
+    sprintf(fname, "%d", totalgroups);
+    numberlen = strlen(fname);
 
     for (g=0; g<totalgroups; g++) {
 	grp = groups+g;
-	DEBUG(fprintf(stderr, "Group %d, size %d, unbalance %d\n", g, grp->gr_size, grp->gr_unbalance));
+	fprintf(stderr, "Group %d, size %d, unbalance %d\n", g, grp->gr_size, grp->gr_unbalance);
 	if (grp->gr_size == 0)
 	    continue;
+	sprintf(fname, "seeded%0*d.txt", numberlen, g+1);
+	outf = fopen(fname, "w");
 	for (p=0; p<MAXMEMBERS; p++) {
 	    prp = grp->gr_pairs[p];
 	    if (prp == 0)
 		continue;
-	    printf("%s,%d,%d", prp->pair_id, prp->pair_fixedgroup+1, prp->pair_class);
-	    printf(",%s\n", prp->pair_property->pv_string);
+	    fprintf(outf, "%s,%d,%d", prp->pair_id, prp->pair_fixedgroup+1, prp->pair_class);
+	    fprintf(outf, ",%s\n", prp->pair_property->pv_string);
 	}
+	fclose(outf);
     }
 }
 
