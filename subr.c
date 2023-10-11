@@ -27,7 +27,7 @@ string_copy(s) char *s; {
  * For reasonableness checking of input
  */
 void
-bound_check(var, description, lolim, hilim) char *description; {
+bound_check(var, description, lolim, hilim) int var, lolim, hilim; char *description; {
 	char erbuf[512];
 
 	if (var < lolim || var > hilim) {

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
+#include <unistd.h>
 #include "seeding2.h"
 #include "subr.h"
 
@@ -412,6 +414,7 @@ seed_pairs()
     }
 }
 
+void
 output_groups()
 {
     int g, p;
