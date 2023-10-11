@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include "subr.h"
 
-main(argc, argv) char **argv; {
+int
+main(argc, argv) int argc; char **argv; {
 	int size;
 	int round;
 	int NS, EW;
