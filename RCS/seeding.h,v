@@ -1,0 +1,87 @@
+head	1.2;
+access;
+symbols;
+locks
+	sater:1.2; strict;
+comment	@ * @;
+
+
+1.2
+date	2009.02.26.12.09.24;	author sater;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2008.10.15.07.05.12;	author sater;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@#define MAXPROPERTIES	3
+#define MAXMEMBERS	29
+#define MULTIPL		10
+
+#define sqr(n)	((n)*(n))
+#undef DEB		/* debug */
+
+typedef struct propertyval pv_t, *pv_p;
+struct propertyval {
+	pv_p	pv_next;
+	char	*pv_string;
+	int	pv_npairs;
+	int	*pv_gmembers;	/* scaled by MULTIPL */
+	int	*pv_ideal;	/* scaled by MULTIPL */
+};
+
+typedef struct property pt_t, *pt_p;
+struct property {
+	pv_p	pt_vals;
+};
+
+typedef struct pair pr_t, *pr_p;
+struct pair {
+	pr_p	pair_next;
+	char	*pair_id1;
+	char	*pair_id2;
+	int	pair_class;
+	pv_p	pair_prop[MAXPROPERTIES];
+};
+
+typedef struct pairclass pc_t, *pc_p;
+struct pairclass {
+	pc_p	prc_next;
+	int	prc_class;
+	pr_p	prc_list;
+	int	prc_size;
+};
+
+typedef struct group gr_t, *gr_p;
+struct group {
+	pr_p	gr_pairs[MAXMEMBERS];
+	int	gr_size;
+	int	gr_unbalance;
+};
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+a6 1
+#define DEB		/* debug */
+d25 2
+a26 1
+	char	*pair_name;
+@

@@ -1,0 +1,98 @@
+head	1.2;
+access;
+symbols;
+locks
+	sater:1.2; strict;
+comment	@ * @;
+
+
+1.2
+date	2009.02.24.15.49.36;	author sater;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2008.10.15.07.05.18;	author sater;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@#include <stdio.h>
+#include <stdlib.h>
+
+/*
+ * Error somewhere, complain and quit
+ */
+void
+error(s) char *s; {
+
+	fprintf(stderr, "Error: %s\n", s);
+	exit(-1);
+}
+
+/*
+ * Copy a string into dynamic storage
+ */
+char *
+string_copy(s) char *s; {
+	char *marea;
+
+	marea=calloc(strlen(s)+1, sizeof(char));
+	return strcpy(marea, s);
+}
+
+/*
+ * For reasonableness checking of input
+ */
+void
+bound_check(var, description, lolim, hilim) char *description; {
+	char erbuf[512];
+
+	if (var < lolim || var > hilim) {
+		sprintf(erbuf, "%s(%d) should be between %d and %d", description, var, lolim, hilim);
+		error(erbuf);
+	}
+}
+
+int read_number() {
+	int n;
+
+	if(scanf("%d", &n) != 1)
+		error("read_number");
+	return n;
+}
+
+void read_line() {
+
+	scanf("\n");
+}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 1
+a10 1
+	fprintf(stderr, "Error %s\n", s);
+d29 2
+a30 1
+bound_check(var, lolim, hilim) {
+d32 4
+a35 4
+	if (var < lolim)
+		error("number too low");
+	if (var > hilim)
+		error("number too high");
+@

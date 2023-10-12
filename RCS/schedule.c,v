@@ -1,0 +1,155 @@
+head	1.2;
+access;
+symbols;
+locks
+	sater:1.2; strict;
+comment	@ * @;
+
+
+1.2
+date	2009.02.24.15.48.49;	author sater;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2008.10.15.07.04.59;	author sater;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@#include <stdlib.h>
+
+
+/*
+ * Modifications for more than two groups:
+ * change sizeA and sizeB to "number of groups, array of groupsizes"
+ * change args of read_schedule
+ */
+
+static
+struct schedule {
+	int sch_nrounds;
+	int sch_nmeetings;
+	int sch_ngroups;
+	int *sch_groupsize;
+} sch_info;
+
+static int **meet;	/* pairs meet in round meet[p1][p2] */
+
+
+void read_schedule(ngroups, groupsizes) int *ngroups, **groupsizes; {
+	int round, meeting;
+	int pair1, pair2;
+	int i;
+	int size, totalsize;
+	
+	sch_info.sch_nrounds = read_number();
+	sch_info.sch_nmeetings = read_number();
+	sch_info.sch_ngroups = read_number();
+	sch_info.sch_groupsize = calloc(sch_info.sch_ngroups, sizeof(int));
+	totalsize = 0;
+	for (i=0; i<sch_info.sch_ngroups; i++) {
+		size = read_number();
+		sch_info.sch_groupsize[i] = size;
+		totalsize += size;
+	}
+	meet = (int **) calloc(totalsize, sizeof(int *));
+	for (i=0; i<totalsize; i++) {
+		meet[i] = (int *) calloc(totalsize, sizeof(int));
+	}
+	*ngroups = sch_info.sch_ngroups;
+	*groupsizes = sch_info.sch_groupsize;
+	for (round=1; round <= sch_info.sch_nrounds; round++) {
+		for (meeting=1; meeting <= sch_info.sch_nmeetings; meeting++) {
+			pair1 = read_number();
+			bound_check(pair1, "pair number in meeting data",
+				1, totalsize);
+			pair2 = read_number();
+			bound_check(pair2, "pair number in meeting data",
+				1, totalsize);
+			meet[pair1-1][pair2-1] = meet[pair2-1][pair1-1] = round;
+		}
+		read_line();
+	}
+}
+
+int play_in_round(pair1, pair2) {
+
+	return meet[pair1-1][pair2-1];
+}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 1
+d10 1
+d18 1
+a18 16
+#define NHASH	101
+
+struct sch_meeting {
+	struct sch_meeting *sch_next;
+	int sch_m_NS;
+	int sch_m_EW;
+	int sch_round;
+} *sm[NHASH];
+
+static compute_hash(a,b) {
+
+	/*
+	 * Assumption in code is that compute(hash(x,y)==compute_hash(y,x)
+	 */
+	return((a*b*1000)%NHASH);
+}
+a19 13
+static void enter_hash(pNS, pEW, R) {
+	int hashval;
+	struct sch_meeting *sp, **spp;
+
+	hashval = compute_hash(pNS, pEW);
+	spp = &sm[hashval];
+	sp = (struct sch_meeting *) calloc(1, sizeof(struct sch_meeting));
+	sp->sch_next = *spp;
+	*spp = sp;
+	sp->sch_m_NS = pNS;
+	sp->sch_m_EW = pEW;
+	sp->sch_round = R;
+}
+d37 4
+d46 2
+a47 1
+			bound_check(pair1, 1, totalsize);
+d49 3
+a51 2
+			bound_check(pair2, 1, totalsize);
+			enter_hash(pair1, pair2, round);
+a57 2
+	int hashval;
+	struct sch_meeting *sp;
+d59 1
+a59 11
+	/*
+	 * check both possibilities of NS and EW
+	 */
+	hashval = compute_hash(pair1, pair2);
+	for (sp=sm[hashval]; sp; sp=sp->sch_next) {
+		if (sp->sch_m_NS == pair1 && sp->sch_m_EW == pair2)
+			return(sp->sch_round);
+		if (sp->sch_m_NS == pair2 && sp->sch_m_EW == pair1)
+			return(sp->sch_round);
+	}
+	return(0);
+@

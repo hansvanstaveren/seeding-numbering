@@ -1,0 +1,50 @@
+head	1.1;
+access;
+symbols;
+locks
+	sater:1.1; strict;
+comment	@ * @;
+
+
+1.1
+date	2009.06.29.07.55.53;	author sater;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <signal.h>
+
+#undef TESTING
+
+int interrupted;
+
+static void catchint() {
+
+	interrupted=1;
+}
+
+void setup_catchint() {
+
+	signal(SIGINT, catchint);
+}
+
+
+#ifdef TESTING
+main() {
+
+	setup_catchint();
+	while (!interrupted)
+		sleep(1);
+	printf("Must have had INT\n");
+}
+#endif
+@

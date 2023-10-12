@@ -1,0 +1,29 @@
+head	1.1;
+access;
+symbols;
+locks
+	sater:1.1; strict;
+comment	@ * @;
+
+
+1.1
+date	2008.10.15.07.05.23;	author sater;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@void error(char *s);
+char * string_copy(char *s);
+void bound_check();
+int read_number();
+void read_line();
+@
