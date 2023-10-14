@@ -15,13 +15,15 @@ pc_p	pairclasses;		/* Pointer to list of pairclasses */
 int 	totalpairs;		/* Numbers of pairs */
 int	totalgroups;		/* Number of groups */
 
+int	wheelchairmode;		/* id2 is group to be placed in */
+
 gr_p	groups;
 int	pairsingroups;		/* Sum of groupsizes */
 
 #define COMMA		','
 
-#define OPTION_STRING	""
-#define USAGE_STRING	""
+#define OPTION_STRING	"w"
+#define USAGE_STRING	"[-w]"
 
 /*
  * Input pairnames
@@ -31,14 +33,14 @@ int	pairsingroups;		/* Sum of groupsizes */
 #ifdef DEB
 FILE *debug;
 
-#define DEBUG(x)	x;
+#define DEBUG(x)	x
 
 void pair_dump(pr_p prp)
 {
 
     while (prp) {
-	fprintf(debug, "  %x: %x \"%s\" \"%d\" %d", prp,
-	prp->pair_next, prp->pair_id, prp->pair_fixedgroup, prp->pair_class);
+	fprintf(debug, "  %x: %x \"%s\" \"%s\" %d", prp,
+	prp->pair_next, prp->pair_id1, prp->pair_id2, prp->pair_class);
 	fprintf(debug, " %x", prp->pair_property);
 	if (prp->pair_property)
 	    fprintf(debug, "(%s,%d)\n",
@@ -93,19 +95,21 @@ pairclass_lookup(int class)
 }
 
 pr_p
-pair_lookup(char *id, int fg, int class)
+pair_lookup(char *id1, char *id2, int class)
 {
     pc_p pcp;	/* class structure */
     pr_p prp, *prpp;	/* pair structure */
     int i, skip;
+    int fg;
     gr_p grp;
 
     prp = (pr_p) calloc(1, sizeof(pr_t));
-    prp->pair_id = string_copy(id);
-    prp->pair_fixedgroup = fg;
+    prp->pair_id1 = string_copy(id1);
+    prp->pair_id2 = string_copy(id2);
+    fg = atoi(id2) - 1;
     prp->pair_class = class;
 
-    if (fg<0 || fg >=totalgroups) {
+    if (!wheelchairmode || fg<0 || fg >=totalgroups) {
 	/* Enter pair in list at random */
 	pcp = pairclass_lookup(class);
 	prpp = &pcp->prc_list;
@@ -169,8 +173,7 @@ input_pairs(FILE *f)
     pr_p prp;
     int lineno = 0;
     int errors=0;
-    char *id;
-    int fg;
+    char *id1,*id2;
 
     while((p = fgets(ibuf, sizeof(ibuf), f)) != NULL) {
 	lineno++;
@@ -180,11 +183,11 @@ input_pairs(FILE *f)
 	 */
 	commap = strchr(p, COMMA);
 	if (commap) {
-	    id = p;
+	    id1 = p;
 	    p = commap;
 	    *p++ = 0;
 	    commap = strchr(p, COMMA);
-	    fg = atoi(p)-1;
+	    id2 = p;
 	}
 	if (commap)
 	    class = atoi(commap+1);
@@ -195,9 +198,9 @@ input_pairs(FILE *f)
 	}
 	*commap++ = 0;
 	*nlp = 0;
-	DEBUG(fprintf(stderr, "%s %d %d found\n", id, fg, class));
-	prp = pair_lookup(id, fg, class);
-	DEBUG(fprintf(stderr, "%s %d %d %x found\n", id, fg, class, prp));
+	DEBUG(fprintf(stderr, "%s %s %d found\n", id1, id2, class));
+	prp = pair_lookup(id1, id2, class);
+	DEBUG(fprintf(stderr, "%s %s %d %x found\n", id1, id2, class, prp));
 	p = strchr(commap, COMMA);
 	if(p == 0) {
 	    prp->pair_property = prop_lookup("");
@@ -279,25 +282,25 @@ init_groups()
 	/*
 	 * Use positions like in Neuberg for smaller groups
 	 */
-	DEBUG(fprintf(debug, "lg=%d, size=%d\n", largestgroup, size))
+	DEBUG(fprintf(debug, "lg=%d, size=%d\n", largestgroup, size));
 	for (i=0; i<size; i++) {
-	    DEBUG(fprintf(debug, "i=%d\n", i))
+	    DEBUG(fprintf(debug, "i=%d\n", i));
 	    /* First calculate desired position as float */
 	    neuberg = ((double) largestgroup / size * (i+0.5)) - 0.5;
-	    DEBUG(fprintf(debug, "nb=%g\n", neuberg))
+	    DEBUG(fprintf(debug, "nb=%g\n", neuberg));
 	    /* Now prepare to round away from the middle */
 	    if (neuberg < (largestgroup-1.0)*0.5)
 		neuberg -= 0.0001;
 	    else
 		neuberg += 0.0001;
 	    neuberg += 0.5;
-	    DEBUG(fprintf(debug, "nbr=%g\n", neuberg))
+	    DEBUG(fprintf(debug, "nbr=%g\n", neuberg));
 	    j = neuberg;
 	    /*
 	     * Insert dummypair
 	     */
 	    grp->gr_pairs[j] = &dummypair;
-	    DEBUG(fprintf(debug, "Fill %d[%d]\n", g, j))
+	    DEBUG(fprintf(debug, "Fill %d[%d]\n", g, j));
 	}
 
 	for(pvp=property_list; pvp; pvp=pvp->pv_next) {
@@ -327,8 +330,8 @@ best_pair(int g, pc_p pcp)
 	id = pvp->pv_ideal[g];
 	unbaldiff += (sqr(gm+MULTIPL-id)-sqr(gm-id));
 	DEBUG(fprintf(debug, "gm=%d, id=%d, unbaldiff=%d\n", gm, id, unbaldiff));
-	DEBUG(fprintf(debug, "Pair %s %d, unb=%d, best=%d\n",
-		prp->pair_id, prp->pair_fixedgroup, unbaldiff, bestunbaldiff));
+	DEBUG(fprintf(debug, "Pair %s %s, unb=%d, best=%d\n",
+		prp->pair_id1, prp->pair_id2, unbaldiff, bestunbaldiff));
 	if (unbaldiff < bestunbaldiff) {
 	    bestunbaldiff = unbaldiff;
 	    bestpair = prp;
@@ -438,8 +441,8 @@ output_groups()
 	    prp = grp->gr_pairs[p];
 	    if (prp == 0)
 		continue;
-	    fprintf(outf, "%s,%d,%d", prp->pair_id, prp->pair_fixedgroup+1, prp->pair_class);
-	    fprintf(outf, ",%s\n", prp->pair_property->pv_string);
+	    fprintf(outf, "%s,%s,%d,%s\n", prp->pair_id1, prp->pair_id2,
+		prp->pair_class, prp->pair_property->pv_string);
 	}
 	fclose(outf);
     }
@@ -457,6 +460,9 @@ main (int argc, char *argv[])
     DEBUG(fprintf(stderr, "Starting\n"));
     while ((c = getopt(argc, argv, OPTION_STRING)) != -1) {
 	switch(c) {
+	case 'w':
+	    wheelchairmode = 1;
+	    break;
 	case '?':
 	    fprintf(stderr, "Usage: %s %s\n", argv[0], USAGE_STRING);
 	    exit(-1);
@@ -473,7 +479,7 @@ main (int argc, char *argv[])
 	fprintf(stderr, "Groups should have %d pairs, there are %d pairs\n", pairsingroups, totalpairs);
 	exit(-1);
     }
-    DEBUG(pairclass_dump())
+    DEBUG(pairclass_dump());
     DEBUG(fprintf(debug, "calling seed_pairs\n"));
     seed_pairs();
     output_groups();

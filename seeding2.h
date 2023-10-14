@@ -16,8 +16,9 @@ struct propertyval {
 typedef struct pair pr_t, *pr_p;
 struct pair {
     pr_p pair_next;
-    char *pair_id;
-    int	pair_fixedgroup;
+    char *pair_id1;
+    char *pair_id2;
+    /* int	pair_fixedgroup; */
     int	pair_class;
     pv_p pair_property;
 };
@@ -30,6 +31,9 @@ struct pairclass {
     int	prc_listsize;
 };
 
+/*
+ * Groups as created by program. Will normally become a section, of for example NS in a Mitchell
+ */
 typedef struct group gr_t, *gr_p;
 struct group {
     pr_p gr_prepos;
