@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include "seeding.h"
+#include "seeding-old.h"
 #include "subr.h"
 
 static char rcsid[] = "$Header: /home/sater/bridge/numberlines/RCS/seeding.c,v 1.2 2009/02/24 15:10:07 sater Exp sater $";

@@ -3,11 +3,14 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <string.h>
 #include "seeding2.h"
 #include "subr.h"
 
 #define random rand
 #define srandom srand
+
+#define MAXGROUPS 100
 
 pv_p	property_list;		/* Starting points for property value list */
 
@@ -17,7 +20,7 @@ int	totalgroups;		/* Number of groups */
 
 int	wheelchairmode;		/* id2 is group to be placed in */
 
-gr_p	groups;
+gr_t	groups[MAXGROUPS];
 int	pairsingroups;		/* Sum of groupsizes */
 
 #define COMMA		','
@@ -66,8 +69,34 @@ pairclass_dump()
     fprintf(debug, "End of pairclass dump\n\n");
 }
 #else
-#define DEBUG(x)	;
+#define DEBUG(x)
 #endif /* DEBUG */
+
+static char digits[] = "0123456789";
+
+void
+decode_xstring(char *str, int *number, int *size) {
+    int numlen1, numlen2, endstr;
+
+    numlen1 = strspn(str, digits);
+    endstr = numlen1;
+    numlen2 = 0;
+    if (str[endstr] == 'x') {
+	numlen2 = strspn(str+endstr+1, digits);
+	endstr = numlen1+1+numlen2;
+    }
+    if (str[endstr] != 0) {
+	fprintf(stderr, "String '%s' not valid format\n", str);
+	exit(-1);
+    }
+    if (numlen2) {
+	*number = atoi(str);
+	*size = atoi(str+numlen1+1);
+    } else {
+	*number = 1;
+	*size = atoi(str);
+    }
+}
 
 pc_p
 pairclass_lookup(int class)
@@ -219,7 +248,7 @@ input_pairs(FILE *f)
 }
 
 pr_t dummypair = {0, 0, 0, 0, 0 };
-int *grpsize;
+int grpsize[MAXGROUPS];
 int largestgroup;
 
 int
@@ -242,10 +271,7 @@ input_groupsize(FILE *f)
     }
 
     /*
-     * First allocate storage for groups
      */
-    grpsize = (int *) calloc(totalgroups, sizeof(int));
-    groups = (gr_p) calloc(totalgroups, sizeof(gr_t));
     for (i=0; i<totalgroups; i++) {
 	p = fgets(ibuf, sizeof(ibuf), f);
 	if (p == NULL) 
@@ -261,6 +287,24 @@ input_groupsize(FILE *f)
 	DEBUG(fprintf(stderr, "Group %d, size %d, largest %d\n", i, gs, largestgroup));
     }
     return 1;
+}
+
+void
+input_grouparg(char *str) {
+    int number, gs;
+    int i;
+
+    decode_xstring(str, &number, &gs);
+    fprintf(stderr, "dec_xs %d %d\n", number, gs);
+    if (gs < 1 || gs > MAXMEMBERS) {
+	fprintf(stderr, "Groupsize must be between 1 and %d\n", MAXMEMBERS);
+	return;
+    }
+    for (i=0; i<number; i++) {
+	grpsize[totalgroups++] = gs;
+    }
+    if (gs > largestgroup)
+	largestgroup = gs;
 }
 
 int
@@ -432,7 +476,7 @@ output_groups()
 
     for (g=0; g<totalgroups; g++) {
 	grp = groups+g;
-	fprintf(stderr, "Group %d, size %d, unbalance %d\n", g, grp->gr_size, grp->gr_unbalance);
+	fprintf(stderr, "Group %d, size %d, unbalance %d\n", g+1, grp->gr_size, grp->gr_unbalance);
 	if (grp->gr_size == 0)
 	    continue;
 	sprintf(fname, "seeded%0*d.txt", numberlen, g+1);
@@ -452,6 +496,9 @@ int
 main (int argc, char *argv[])
 {
     int c;
+    int n,s;
+    void decode_xstring();
+    int index;
 
 #ifdef DEB
     debug = fopen("debug", "w");
@@ -468,9 +515,15 @@ main (int argc, char *argv[])
 	    exit(-1);
 	}
     }
+    for (index = optind; index < argc; index++)
+	input_grouparg(argv[index]);
+
     srandom(getpid());
 
-    if (!input_groupsize(stdin))
+    /*
+     * Backwards compatibility, if no groupsizes on command line read from file
+     */
+    if (totalgroups==0 && !input_groupsize(stdin))
 	return -1;
     pairsingroups = init_groups();
     if (!input_pairs(stdin))
