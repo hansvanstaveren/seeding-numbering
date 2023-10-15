@@ -4,7 +4,7 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <string.h>
-#include "seeding2.h"
+#include "seeding.h"
 #include "subr.h"
 
 #define random rand
@@ -26,7 +26,7 @@ int	pairsingroups;		/* Sum of groupsizes */
 #define COMMA		','
 
 #define OPTION_STRING	"w"
-#define USAGE_STRING	"[-w]"
+#define USAGE_STRING	"[-w] [<number>x<grpsize>] ..."
 
 /*
  * Input pairnames
@@ -295,7 +295,7 @@ input_grouparg(char *str) {
     int i;
 
     decode_xstring(str, &number, &gs);
-    fprintf(stderr, "dec_xs %d %d\n", number, gs);
+    DEBUG(fprintf(stderr, "decode_xstring %d %d\n", number, gs));
     if (gs < 1 || gs > MAXMEMBERS) {
 	fprintf(stderr, "Groupsize must be between 1 and %d\n", MAXMEMBERS);
 	return;

@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "subr.h"
 
+int
 main() {
 	int nround, nmeetings, ngroups, pairsA, pairsB;
 	int *mar;

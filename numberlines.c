@@ -1,8 +1,17 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include <unistd.h>
 #include "subr.h"
 
 #define random rand
 #define srandom srand
+
+int usertime();
+void setup_catchint();
+int play_in_round();
+void read_schedule();
 
 /* #define DEBUG			/* debugging on or off */
  
@@ -55,14 +64,16 @@ country_t	countries[MAXCOUNTRIES];
 country_ref_t	country_refs[MAXCOUNTRIES];
 int ncountries;
 
-min(a, b) {
+int
+min(int a, int b) {
 
 	if (a>b)
 		return b;
 	return a;
 }
 
-max(a, b) {
+int
+max(int a, int b) {
 
 	if (a>b)
 		return a;
@@ -96,6 +107,7 @@ dump_countries() {
 void
 enter_pair(country, id1, id2, strength, lowbnd, highbnd)
 char *country, *id1, *id2, *strength;
+int lowbnd, highbnd;
 {
 	country_p	cp;
 	country_ref_p	cr;
@@ -148,7 +160,7 @@ char *country, *id1, *id2, *strength;
  * read a couple of pairs and enter into admin
  */
 void
-read_pairs(npairs,lb,hb) {
+read_pairs(int npairs,int lb,int hb) {
 	int i;
 	char line[LINESIZE];
 	char pairid1[LINESIZE], pairid2[LINESIZE], strength[LINESIZE], country[LINESIZE];
@@ -177,7 +189,7 @@ pair_p *currentnumbering, *bestnumbering;
 int totalpairs;
 
 void
-init_numbering(npairs) {
+init_numbering(int npairs) {
 
 	/*
 	 * Allocate the necessary storage for current and best result
@@ -273,7 +285,7 @@ order_pairs(cp) country_p cp;
 }
 
 int
-play_last_round(pos, pp) pair_p pp;
+play_last_round(pos, pp) int pos; pair_p pp;
 {
 	int i;
 	int score, worstround;
@@ -373,7 +385,7 @@ compare_country_ref(cr1, cr2) country_ref_p cr1, cr2;
 }
 
 int
-numbering_try(roundp, squarep, bestlr) int *roundp, *squarep; {
+numbering_try(roundp, squarep, bestlr) int *roundp, *squarep; int bestlr; {
 	country_ref_p	cr;
 	int lr,worstround, square;
 

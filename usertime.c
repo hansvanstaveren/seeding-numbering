@@ -1,5 +1,6 @@
 #include <time.h>
 
+int
 usertime() {
 	clock_t clocktime;
 
