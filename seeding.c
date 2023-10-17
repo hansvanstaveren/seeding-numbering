@@ -212,9 +212,10 @@ input_pairs(FILE *f)
 	 */
 	commap = strchr(p, COMMA);
 	if (commap) {
+	    /* comma after id1 */
 	    id1 = p;
+	    *commap++ = 0;	/* NULL to comma */
 	    p = commap;
-	    *p++ = 0;
 	    commap = strchr(p, COMMA);
 	    id2 = p;
 	}
@@ -425,9 +426,9 @@ seed_pairs()
 	grp = groups+g;
 	if (grp->gr_pairs[p]) {
 	    /*
-	     * Could be filled with dummy or
-	     * prepositioned pair
-	     * TODO HERE
+	     * This is a place where a pair should be placed.
+	     * First try a prepositioned pair of this class or stronger
+	     * otherwise find a good pair based on class and property
 	     */
 	    if (grp->gr_prepos && (grp->gr_holestofill <= grp->gr_ppsize || grp->gr_prepos->pair_class <= pcp->prc_class)) {
 		/* Take this pair */
@@ -438,11 +439,17 @@ seed_pairs()
 	    } else {
 		grp->gr_pairs[p] = best_pair(g, pcp);
 		pairshandled++;
+		/*
+		 * Take care that this might be the last pair in its class to be handled
+		 */
 		if (pcp->prc_listsize == 0)
 		    pcp = pcp->prc_next;
 	    }
 	    grp->gr_holestofill--;
 	}
+	/*
+	 * To next place, check direction of seesaw and handle boundaries
+	 */
 	if (direction == 1) {
 	    g++;
 	    if (g == totalgroups) {
@@ -470,13 +477,16 @@ output_groups()
     FILE *outf;
     char fname[200];
     int numberlen;
+    int unbal_sum_square;
 
     sprintf(fname, "%d", totalgroups);
     numberlen = strlen(fname);
 
+    unbal_sum_square = 0;
     for (g=0; g<totalgroups; g++) {
 	grp = groups+g;
 	fprintf(stderr, "Group %d, size %d, unbalance %d\n", g+1, grp->gr_size, grp->gr_unbalance);
+	unbal_sum_square += grp->gr_unbalance*grp->gr_unbalance;;
 	if (grp->gr_size == 0)
 	    continue;
 	sprintf(fname, "seeded%0*d.txt", numberlen, g+1);
@@ -490,6 +500,7 @@ output_groups()
 	}
 	fclose(outf);
     }
+    fprintf(stderr, "Unbalance sum of squares: %.1f\n", (double) unbal_sum_square/10000.0);
 }
 
 int
@@ -529,7 +540,7 @@ main (int argc, char *argv[])
     if (!input_pairs(stdin))
 	return -1;
     if (pairsingroups != totalpairs) {
-	fprintf(stderr, "Groups should have %d pairs, there are %d pairs\n", pairsingroups, totalpairs);
+	fprintf(stderr, "Defined groups have %d pairs, there are %d pairs\n", pairsingroups, totalpairs);
 	exit(-1);
     }
     DEBUG(pairclass_dump());
