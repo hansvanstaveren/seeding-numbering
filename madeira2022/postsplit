@@ -1,10 +1,14 @@
-# last
-# xam and xan final section
+# combine groups into sections
+# current version A section has extra pairs, 14 full groups, 2 addenda groups
 
+
+# First copy seeded groups randomized to grp files
+# the -R flag to sort randomizes
 for grp in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16
 do sort -R seeded$grp.txt > grp$grp
 done
 
+# the six standard sections
 perl combine.pl grp01 grp02 > sectB.txt
 perl combine.pl grp03 grp04 > sectC.txt
 perl combine.pl grp05 grp06 > sectD.txt
@@ -12,6 +16,8 @@ perl combine.pl grp07 grp08 > sectE.txt
 perl combine.pl grp09 grp10 > sectF.txt
 perl combine.pl grp11 grp12 > sectG.txt
 
+# A NS will become odd highest groups
+# A EW ecen highest groups
 cat grp13 grp15 > sectA-NS
 cat grp14 grp16 > sectA-EW
-perl combine.pl sectA-NS sectA-EW > test-sectA.txt
+perl combine.pl sectA-NS sectA-EW > sectA.txt
