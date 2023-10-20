@@ -14,39 +14,37 @@ sub is_present {
 #
 # Read and decode CSV version of registration spreadsheet
 #
+$lineno = 0;
 while (<>) {
-    chop;
+    $lineno++;
     next if /^BM/;			# Header
-    @fields = split /;/;
-    # print $#fields, "\n";
-    # print $fields[0], $fields[1], "\n";
-    $nat = $fields[3];			# Use nationality of first player in pair
-    $str = $fields[2];
-    $p1 = $fields[0];			# bridgemate number of player 1
-    $p2 = $fields[4];			# bridgemate number of player 2
+    chop;
+    # @fields = split /;/;
+    ($p1, $unused, $strength, $nationality, $p2) = split /;/;
+    # print stderr "line $lineno: $p1, $unused, $strength, $nationality, $p2\n";
     if (!$p1 || !$ p2) {
-	print stderr "Line: $_\n";
+	print stderr "Line $lineno: $_\n";
     }
     next unless ($p1 && $p2);
     is_present($p1);
     is_present($p2);
-    # print "p1=$p1, p2=$p2, nat=$nat, str=$str\n";
+    # print "p1=$p1, p2=$p2, nationality=$nationality, strength=$strength\n";
 
     # Compute group field, 0 except for "wheelchair"
     $grp = 0;
-    if ($str =~ /^WCB/) {
+    if ($strength =~ /^WCB/) {
 	$grp = 1;
     }
-    if ($str =~ /^WCC/) {
+    if ($strength =~ /^WCC/) {
 	$grp = 3;
     }
 
     # Encode strength, weakest if unknown string
     $numstr = 0;
-    $numstr = 1 if ($str =~ /WORLD/);
-    $numstr = 2 if ($str =~ /EXPERT/);
-    $numstr = 3 if ($str =~ /STRONG/);
-    $numstr = 4 if ($str =~ /ADVANCED/);
+    $numstr = 1 if ($strength =~ /WORLD/);
+    $numstr = 2 if ($strength =~ /EXPERT/);
+    $numstr = 3 if ($strength =~ /STRONG/);
+    $numstr = 4 if ($strength =~ /ADVANCED/);
     $numstr = 5 if ($numstr == 0);
-    print "$p1-$p2,$grp,$numstr,$nat\n";
+    print "$p1-$p2,$grp,$numstr,$nationality\n";
 }
