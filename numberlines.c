@@ -4,14 +4,13 @@
 #include <string.h>
 #include <unistd.h>
 #include "subr.h"
+#include "schedule.h"
 
 #define random rand
 #define srandom srand
 
 int usertime();
 void setup_catchint();
-int play_in_round();
-void read_schedule();
 
 /* #define DEBUG			/* debugging on or off */
  

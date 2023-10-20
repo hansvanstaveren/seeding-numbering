@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "subr.h"
 
 
 /*
@@ -54,7 +55,7 @@ void read_schedule(ngroups, groupsizes) int *ngroups, **groupsizes; {
 	}
 }
 
-int play_in_round(pair1, pair2) {
+int play_in_round(int pair1, int pair2) {
 
 	return meet[pair1-1][pair2-1];
 }
