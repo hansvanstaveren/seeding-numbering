@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "subr.h"
 #include "schedule.h"
+#include "interrupt.h"
 
 #define random rand
 #define srandom srand
@@ -431,7 +432,6 @@ main() {
 	int i, lownr, highnr;
 	int maxtries, newmaxtries, timelimtries;
 	int ut;
-	extern int interrupted;
 
 	srandom(time(NULL)+getpid());
 	read_schedule(&ngroups, &groupsizes);
