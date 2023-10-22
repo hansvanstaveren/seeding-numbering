@@ -5,13 +5,11 @@
 #include <unistd.h>
 #include "subr.h"
 #include "schedule.h"
+#include "usertime.h"
 #include "interrupt.h"
 
 #define random rand
 #define srandom srand
-
-int usertime();
-void setup_catchint();
 
 /* #define DEBUG			/* debugging on or off */
  
