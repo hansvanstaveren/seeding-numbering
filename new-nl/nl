@@ -1,0 +1,296 @@
+#!/usr/bin/perl -w
+
+#
+# TODO:
+# Give program specific target, after which sub optimization
+# Sort of sum of squares, but with possibility to mark extra dangerous country
+#
+# Move from major to minor optimization if tries gets large
+# Go from 100% major to 50% major in the limit
+# So try%something==0 for minor, where something goes down from about 100 to 2
+#
+
+# Subgrps are for Mitchell type movements
+
+use List::Util qw ( shuffle );
+
+sub setmeet {
+    my ($ns, $ew, $rnd) = @_;
+
+    ($ns, $ew) = ($ew, $ns) if $ew<$ns;
+    $meet{"$ns:$ew"} = $rnd;
+}
+
+sub getmeet {
+    my ($ns, $ew) = @_;
+
+    ($ns, $ew) = ($ew, $ns) if $ew<$ns;
+    my $mt = $meet{"$ns:$ew"};
+    return defined($mt) ? $mt : 0;
+}
+
+sub readmovement {
+    my ($file) = @_;
+
+    open(MOV, "<", $file) || die;
+    $hdr = <MOV>;
+    if ($hdr =~ /^INDIV/) {
+	 # Individual
+	 $rounds = 0;
+	 $npairs = 0;
+	 while (<MOV>) {
+	    if (/^Round ([0-9]*)/) {
+		$round = $1;
+		 if ($round > $rounds) {
+		    $rounds = $round;
+		}
+	    } else {
+		chomp;
+		($pl_n, $pl_e, $pl_s, $pl_w) = split (/;/);
+
+		$npairs = $pl_n if ($pl_n > $npairs);
+		$npairs = $pl_e if ($pl_e > $npairs);
+		$npairs = $pl_s if ($pl_s > $npairs);
+		$npairs = $pl_w if ($pl_w > $npairs);
+
+		setmeet($pl_n, $pl_e, $round);
+		setmeet($pl_n, $pl_w, $round);
+		setmeet($pl_s, $pl_e, $round);
+		setmeet($pl_s, $pl_w, $round);
+	    }
+	}
+    } elsif ($hdr =~ /,/) {
+	# Format tabel (Fotis)
+	$rounds = 0;
+	$npairs = 0;
+	while (<MOV>) {
+	    my ($t, $r, $ns, $ew, @rest) = split /,/;
+	    $#rest = -1;	# Stop complaining about unused
+	    setmeet($ns, $ew, $r);
+	    $rounds = $r if ($r > $rounds);
+	    $npairs = $ns if ($ns > $npairs);
+	    $npairs = $ew if ($ew > $npairs);
+	}
+    } else {
+	# Format .asc (NBB)
+	($npairs, $ntables, $rounds, $brdsets, @rest) = split " ", $hdr;
+	$rest[10] = $brdsets;	#Stop complaining about unused
+	for my $r (1..$rounds) {
+	    my @mov = split " ", <MOV>;
+	    for (1..$ntables) {
+		my ($ns, $ew, $b) = splice @mov, 0, 3;
+		# print "$ns<->$ew\n";
+		setmeet($ns, $ew, $r);
+	    }
+	}
+    }
+    close MOV;
+    @meetings_sorted = sort { $meet{$a} <=> $meet{$b} } keys %meet;
+}
+
+sub readgroups {
+    my ($file) = @_;
+
+    open(GRP, "<", $file) || die;
+    my $total = 0;
+    my $grpno = 0;
+    $max_subgrp = 0;
+    while(<GRP>) {
+	chomp;
+	my ($grp, @args) = split;
+	$grpno++;
+	$grpname[$grpno] = $grp;
+	my $subgrp = 0;
+	if ($args[0] =~ "x([0-9]+)") {
+	    # Group counts heavier for sum of square stuff
+	    shift @args;
+	    $grpextra[$grpno] = $1;
+	} else {
+	    $grpextra[$grpno] = 0;
+	}
+	while (@args > 0) {
+	    my $sz = shift @args;
+	    # sizeof subgrp
+	    $sz =~ /^[0-9]+$/ || die "group $grp, $sz is not a number\n";
+	    $subgrp++;
+	    print "group $grp/$subgrp, size $sz\n";
+	    if ($subgrp > $max_subgrp) {
+	    	# Another subgrp appears
+		$max_subgrp = $subgrp;
+		$subtotal[$subgrp] = 0;
+	    }
+	    $subgrp_size{"$grpno:$subgrp"} = $sz;
+	    $subtotal[$subgrp] += $sz;
+	    $grpsize[$grpno] += $sz;
+	}
+    }
+    $total = 0;
+    for my $sg (1..$max_subgrp) {
+	$subgrp_start[$sg] = $total+1;
+	$total += $subtotal[$sg];
+	print "counting: sg $sg, start $subgrp_start[$sg], total $total\n";
+	# Clear subgroups if not set
+	for (1..$grpno) {
+	    $subgrp_size{"$_:$sg"} = 0 unless defined($subgrp_size{"$_:$sg"});
+	}
+    }
+    die "Total is wrong" unless $total==$npairs;
+    @grouporder = reverse sort { $grpsize[$a] <=> $grpsize[$b] } (1..$grpno);
+    # print "grouporder: @grouporder\n";
+    close GRP;
+}
+
+sub findplaces {
+    my ($grp, $first, $last, $lim) = @_;
+    my (@places);
+
+    # print "findplaces($grp, $first, $last)\n";
+    for my $place ($first..$last) {
+	# Already filled?
+	next if defined($numbering[$place]);
+	# Potential place, check meetings
+	my $possible = 1;
+	# print "possible place $place for $grp\n";
+	for my $otherplace (1..$npairs) {
+	    my $othergrp = $numbering[$otherplace];
+	    next unless defined($othergrp);
+	    if ($grp == $othergrp) {
+		my $mt = getmeet($place, $otherplace);
+		if ($mt >= $lim) {
+		    # print "failed because of $otherplace, meeting $mt\n";
+		    $possible = 0;
+		    last;
+		}
+	    }
+	}
+
+	push @places, $place if $possible;
+    }
+    # print "possible places for $grp: @places\n";
+    return 0 if (@places < 1);
+    my $chosenplace = $places[rand($#places + 1)];
+    # print "chosen place $chosenplace\n";
+    $numbering[$chosenplace] = $grp;
+    return $chosenplace;
+}
+
+sub makenumbering {
+    my ($lim) = @_;
+
+    $stat_runs++;
+    $stat_lim += $lim;
+    $#numbering = -1;		# Clear array
+    for my $grp (@grouporder) {
+	my (@gr_sg);
+
+	$stat_term++;
+	#
+	# Look up all subgroups for this group and randomize
+	#
+	for my $sg (1..$max_subgrp) {
+	    push(@gr_sg, $sg) for (1..$subgrp_size{"$grp:$sg"});
+	}
+	@gr_sg = shuffle(@gr_sg);
+	# print "numbering group $grp, gr_sg=@gr_sg\n";
+
+	for my $sg (@gr_sg) {
+	    my $first = $subgrp_start[$sg];
+	    my $last = $first + $subtotal[$sg] - 1;
+
+	    # Return if no place
+	    return 0 unless findplaces($grp, $first, $last, $lim);
+	}
+    }
+    return 1;
+}
+
+sub printsolution {
+    my ($try, $lim, $sumsq, @ar) = @_;
+
+    # print "limit $lim, ar @ar\n";
+    print "After $try tries solution of at most round $lim/$sumsq:\n";
+    for my $grp (@grouporder) {
+	my (@pl);
+
+	for (1..$npairs) {
+	    if ($ar[$_] eq $grp) {
+		push @pl, $_;
+	    }
+	}
+	my $lm = $last_meeting_grp[$grp];
+	$lm = "never" unless defined $lm;
+	print "Group $grpname[$grp], last $lm \@ ", join(', ', @pl), "\n";
+    }
+}
+
+sub evaluate {
+    my (@n) = @_;
+    my ($lastmtotal);
+
+    for my $m (@meetings_sorted) {
+	my ($p1, $p2) = split /:/, $m;
+	if ($n[$p1] == $n[$p2]) {
+	    # meeting between countrymen
+	    # ......
+	    my $g = $n[$p1];
+	    $lastmtotal = $last_meeting_grp[$g] = $meet{$m};
+	}
+    }
+    my $sumsq = 0;
+    for my $g (@grouporder) {
+	my $l = $last_meeting_grp[$g];
+	$l = 0 unless defined $l;
+	# print "Group $g, lastm $l\n";
+	my $power = $l*$l;
+	$power *= $l for (1..$grpextra[$g]);
+	$sumsq += $power;
+    }
+    return ($lastmtotal, $sumsq);
+}
+
+#
+# Main program starts
+#
+
+readmovement($ARGV[0]);
+readgroups($ARGV[1]);
+
+# open DEBUG, ">", "debug-out" || die;
+
+$try = 0;
+$xlim = 0;
+$limit = $rounds+1;
+$begin = time;
+
+$stat_runs = 0;
+$stat_lim = 0;
+$stat_term = 0;
+
+do {
+    $try++;
+    if ($try % 500 == 0) {
+	$runtime = time-$begin;
+	if($try %25000==0) {
+	    print "Try $try after ", $runtime, " seconds,";
+	    printf "Avg grp/try %.2f, av lim %.2f\n", $stat_term/$stat_runs, $stat_lim/$stat_runs;
+	}
+	$try = 1000000000 if $runtime>7200;
+	$xlim = $try > 10000 ? 80 : $try > 4000 ? 50 : 2;
+    }
+    # print DEBUG "try $try, limit $limit\n";
+    if(makenumbering($limit+($try%100<=$xlim))) {
+	($lr, $sumsq) = evaluate(@numbering);
+	if ($lr < $limit) {
+	    # better last round
+	    $limit = $lr;
+	    $bestsumsq = $sumsq;
+	    printsolution($try, $limit, $sumsq, @numbering);
+	    $try = 0;
+	    $xlim = 0;
+	} elsif ($lr == $limit && $sumsq < $bestsumsq) {
+	    $bestsumsq = $sumsq;
+	    printsolution($try, $limit, $sumsq, @numbering);
+	}
+	# print "Try $try, lr=$lr, sumsq=$sumsq\n";
+    }
+} while ($try < 10000000);
