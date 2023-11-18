@@ -18,15 +18,16 @@ pc_p	pairclasses;		/* Pointer to list of pairclasses */
 int 	totalpairs;		/* Numbers of pairs */
 int	totalgroups;		/* Number of groups */
 
-int	wheelchairmode;		/* id2 is group to be placed in */
+int	seq_strength = 0;	/* Output pairs in strength order per group */
+int	wheelchairmode = 0;	/* id2 is group to be placed in */
 
 gr_t	groups[MAXGROUPS];
 int	pairsingroups;		/* Sum of groupsizes */
 
 #define COMMA		','
 
-#define OPTION_STRING	"w"
-#define USAGE_STRING	"[-w] [<number>x<grpsize>] ..."
+#define OPTION_STRING	"sw"
+#define USAGE_STRING	"[-s] [-w] [<number>x<grpsize>] ..."
 
 /*
  * Input pairnames
@@ -243,12 +244,14 @@ input_pairs(FILE *f)
 	/* process string p */
 	DEBUG(fprintf(debug, "Property is %s\n", p));
 	prp->pair_property = prop_lookup(p);
+	prp->pair_random = random();
+	DEBUG(fprintf(stderr, "pair id1=%s, rand=%d\n", id1, prp->pair_random));
 	totalpairs++;
     }
     return errors==0;
 }
 
-pr_t dummypair = {0, 0, 0, 0, 0 };
+pr_t dummypair = {0, 0, 0, 0, 0, 0 };
 int grpsize[MAXGROUPS];
 int largestgroup;
 
@@ -342,7 +345,8 @@ init_groups()
 	    DEBUG(fprintf(debug, "nbr=%g\n", neuberg));
 	    j = neuberg;
 	    /*
-	     * Insert dummypair
+	     * Insert dummypair:
+	     * Will be replaced by real pair later
 	     */
 	    grp->gr_pairs[j] = &dummypair;
 	    DEBUG(fprintf(debug, "Fill %d[%d]\n", g, j));
@@ -468,6 +472,25 @@ seed_pairs()
     }
 }
 
+int pair_compar(const void *vp1, const void *vp2) {
+	pr_p p1, p2;
+
+	p1 = * ((pr_p *) vp1);
+	p2 = * ((pr_p *) vp2);
+
+	/*
+	 * one is a hole, or real compare
+	 * holes at the end
+	 */
+
+	if (p1 == 0)
+	    return (p2==0 ? 0 : 1);
+	if (p2 == 0)
+	    return -1;
+	DEBUG(fprintf(stderr, "compar %d %d\n", p1->pair_random, p2->pair_random));
+	return (p1->pair_random - p2->pair_random);
+}
+
 void
 output_groups()
 {
@@ -489,6 +512,15 @@ output_groups()
 	unbal_sum_square += grp->gr_unbalance*grp->gr_unbalance;;
 	if (grp->gr_size == 0)
 	    continue;
+
+	/*
+	 * You should randomize pairs in genereal
+	 */
+
+	if (!seq_strength) {
+	    qsort((void *) grp->gr_pairs, MAXMEMBERS, sizeof(grp->gr_pairs[0]), pair_compar);
+	}
+
 	sprintf(fname, "seeded%0*d.txt", numberlen, g+1);
 	outf = fopen(fname, "w");
 	for (p=0; p<MAXMEMBERS; p++) {
@@ -518,6 +550,9 @@ main (int argc, char *argv[])
     DEBUG(fprintf(stderr, "Starting\n"));
     while ((c = getopt(argc, argv, OPTION_STRING)) != -1) {
 	switch(c) {
+	case 's':
+	    seq_strength = 1;
+	    break;
 	case 'w':
 	    wheelchairmode = 1;
 	    break;

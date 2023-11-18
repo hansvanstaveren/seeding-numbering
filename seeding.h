@@ -18,8 +18,8 @@ struct pair {
     pr_p pair_next;
     char *pair_id1;
     char *pair_id2;
-    /* int	pair_fixedgroup; */
     int	pair_class;
+    int pair_random;	/* Used for shuffling */
     pv_p pair_property;
 };
 

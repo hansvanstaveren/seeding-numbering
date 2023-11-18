@@ -1,6 +1,6 @@
 CFLAGS=-I.
 
-all:	mitchell hhj numberlines seeding seeding2 baromhowell
+all:	mitchell hhj numberlines seeding baromhowell
 
 clean:
 	rm mitchell mitchell.exe hhj hhj.exe numberlines numberlines.exe seeding seeding.exe baromhowell baromhowell.exe *.o
