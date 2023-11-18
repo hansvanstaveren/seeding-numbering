@@ -20,14 +20,15 @@ int	totalgroups;		/* Number of groups */
 
 int	seq_strength = 0;	/* Output pairs in strength order per group */
 int	wheelchairmode = 0;	/* id2 is group to be placed in */
+int	trad_output = 0;	/* Output pairs in one group-after-group */
 
 gr_t	groups[MAXGROUPS];
 int	pairsingroups;		/* Sum of groupsizes */
 
 #define COMMA		','
 
-#define OPTION_STRING	"sw"
-#define USAGE_STRING	"[-s] [-w] [<number>x<grpsize>] ..."
+#define OPTION_STRING	"swt"
+#define USAGE_STRING	"[-s] [-w] [-t] [<number>x<grpsize>] ..."
 
 /*
  * Input pairnames
@@ -522,7 +523,7 @@ output_groups()
 	}
 
 	sprintf(fname, "seeded%0*d.txt", numberlen, g+1);
-	outf = fopen(fname, "w");
+	outf = trad_output ? stdout : fopen(fname, "w");
 	for (p=0; p<MAXMEMBERS; p++) {
 	    prp = grp->gr_pairs[p];
 	    if (prp == 0)
@@ -530,7 +531,8 @@ output_groups()
 	    fprintf(outf, "%s,%s,%d,%s\n", prp->pair_id1, prp->pair_id2,
 		prp->pair_class, prp->pair_property->pv_string);
 	}
-	fclose(outf);
+	if (!trad_output)
+		fclose(outf);
     }
     fprintf(stderr, "Unbalance sum of squares: %.1f\n", (double) unbal_sum_square/10000.0);
 }
@@ -555,6 +557,9 @@ main (int argc, char *argv[])
 	    break;
 	case 'w':
 	    wheelchairmode = 1;
+	    break;
+	case 't':
+	    trad_output = 1;
 	    break;
 	case '?':
 	    fprintf(stderr, "Usage: %s %s\n", argv[0], USAGE_STRING);
