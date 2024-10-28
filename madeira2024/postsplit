@@ -1,0 +1,19 @@
+# combine groups into sections
+# current version A section has extra pairs, 14 full groups, 2 addenda groups
+
+
+# the eight standard sections
+perl combine.pl grp01 grp02 > sectB.txt
+perl combine.pl grp03 grp04 > sectC.txt
+perl combine.pl grp05 grp06 > sectD.txt
+perl combine.pl grp07 grp08 > sectE.txt
+perl combine.pl grp09 grp10 > sectF.txt
+perl combine.pl grp11 grp12 > sectG.txt
+perl combine.pl grp13 grp14 > sectH.txt
+perl combine.pl grp15 grp16 > sectI.txt
+
+# A NS will become odd highest groups
+# A EW even highest groups
+cat grp17 grp19 > sectA-NS
+cat grp18 grp20 > sectA-EW
+perl combine.pl sectA-NS sectA-EW > sectA.txt

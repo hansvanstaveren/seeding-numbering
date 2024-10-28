@@ -2,7 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
+#ifdef notdef
 #include <unistd.h>
+#endif
 #include <string.h>
 #include "seeding.h"
 #include "subr.h"
