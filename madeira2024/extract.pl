@@ -1,5 +1,8 @@
 #!perl -w
 
+#
+# Groups for wheelchairs
+#
 $wcgroup{0} = 0;
 $wcgroup{"B"} = 1;
 # $wcgroup{"C"} = 3;
@@ -26,19 +29,6 @@ open (DEBUG, ">errors");
 open (STATS, ">statistics");
 open (SEEDIN, ">seedin");
 
-#read player database
-# open (PLAYERS, "players.csv") || die;
-# while (<PLAYERS>) {
-#     my @fields = split /;/;
-#     $bm = $fields[1];
-#     $nationality = $fields[5];
-#     $strength = $fields[7];
-#     $pl_nat{$bm} = $nationality;
-#     $pl_str{$bm} = $strength;
-#     # print STDERR "Read player $bm of country $nationality, strength $strength\n";
-# }
-#close(PLAYERS);
-	
 #
 # Read and decode CSV version of registration spreadsheet
 #
