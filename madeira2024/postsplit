@@ -3,17 +3,19 @@
 
 
 # the eight standard sections
-perl combine.pl grp01 grp02 > sectB.txt
-perl combine.pl grp03 grp04 > sectC.txt
-perl combine.pl grp05 grp06 > sectD.txt
-perl combine.pl grp07 grp08 > sectE.txt
-perl combine.pl grp09 grp10 > sectF.txt
-perl combine.pl grp11 grp12 > sectG.txt
-perl combine.pl grp13 grp14 > sectH.txt
-perl combine.pl grp15 grp16 > sectI.txt
+perl combine.pl seeded01.txt seeded02.txt > sectB.txt
+perl combine.pl seeded03.txt seeded04.txt > sectC.txt
+perl combine.pl seeded05.txt seeded06.txt > sectD.txt
+perl combine.pl seeded07.txt seeded08.txt > sectE.txt
+perl combine.pl seeded09.txt seeded10.txt > sectF.txt
+perl combine.pl seeded11.txt seeded12.txt > sectG.txt
+perl combine.pl seeded13.txt seeded14.txt > sectH.txt
+perl combine.pl seeded15.txt seeded16.txt > sectI.txt
+perl combine.pl seeded17.txt seeded18.txt > sectJ.txt
+perl combine.pl seeded19.txt seeded20.txt > sectK.txt
 
 # A NS will become odd highest groups
 # A EW even highest groups
-cat grp17 grp19 > sectA-NS
-cat grp18 grp20 > sectA-EW
+cat seeded21.txt seeded23.txt > sectA-NS
+cat seeded22.txt seeded24.txt > sectA-EW
 perl combine.pl sectA-NS sectA-EW > sectA.txt
