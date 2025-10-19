@@ -13,9 +13,10 @@ perl combine.pl seeded13.txt seeded14.txt > sectH.txt
 perl combine.pl seeded15.txt seeded16.txt > sectI.txt
 perl combine.pl seeded17.txt seeded18.txt > sectJ.txt
 perl combine.pl seeded19.txt seeded20.txt > sectK.txt
+perl combine.pl seeded21.txt seeded22.txt > sectL.txt
 
 # A NS will become odd highest groups
 # A EW even highest groups
-cat seeded21.txt seeded23.txt > sectA-NS
-cat seeded22.txt seeded24.txt > sectA-EW
+cat seeded23.txt seeded25.txt > sectA-NS
+cat seeded24.txt seeded26.txt > sectA-EW
 perl combine.pl sectA-NS sectA-EW > sectA.txt

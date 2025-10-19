@@ -1,0 +1,18 @@
+# A NS will become odd highest groups
+# A EW even highest groups
+#cat seeded23.txt seeded25.txt > sectA-NS
+#cat seeded24.txt seeded26.txt > sectA-EW
+#perl combine.pl sectA-NS sectA-EW > sectA.txt
+
+A: 1,25 2,26
+B: 3 4
+C: 5 6
+D: 7 8
+E: 9 10
+F: 11 12
+G: 13 14
+H: 15 16
+I: 17 18
+J: 19 20
+K: 21 22
+L: 23 24

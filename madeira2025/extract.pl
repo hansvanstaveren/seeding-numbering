@@ -25,6 +25,30 @@ sub is_present {
     return 0;
 }
 
+sub num_strength {
+    my ($strength) = @_;
+    my ($numstr);
+
+    $numstr = 0;
+    $numstr = 1 if ($strength =~ /WORLD/i);
+    $numstr = 2 if ($strength =~ /EXPERT/i);
+    $numstr = 3 if ($strength =~ /STRONG/i);
+    $numstr = 4 if ($strength =~ /ADVANCED/i);
+    $numstr = 5 if ($strength =~ /SOCIAL/i);
+
+    return $numstr if ($numstr);
+    print STDERR "Strength $strength unknown\n";
+    return 0;
+}
+
+sub avg_strength {
+    my ($s1, $s2) = @_;
+
+    my $ns1 = num_strength($s1);
+    my $ns2 = num_strength($s2);
+    return (int(($ns1+$ns2)/2));
+}
+
 open (DEBUG, ">errors");
 open (STATS, ">statistics");
 open (SEEDIN, ">seedin");
@@ -38,7 +62,7 @@ $lineno = 0;
 while (<PAIRS>) {
     $lineno++;
     # print "$lineno $_\n";
-    next if /^BM/;			# Header
+    next if /^BM/i;			# Header
     s/\r$//;
     chomp;
     @fields = split /;/;
@@ -46,7 +70,7 @@ while (<PAIRS>) {
     # $id1 = $fields[0];
     $p1 = $fields[0];
     # $id2 = $fields[4];
-    $p2 = $fields[3];
+    $p2 = $fields[7];
     # print "p1-p2 $p1-$p2\n";
     # print STDERR "line $lineno: $p1, $unused, $strength, $nationality, $p2\n";
     if ($p1 !~ /^[0-9]+$/ || $p2 !~ /^[0-9]+$/ || $p1 <= 0 || $p1 >=100000 || $p2 <= 0 || $p2 >= 100000) {
@@ -55,11 +79,12 @@ while (<PAIRS>) {
     }
     next if is_present($p1, $lineno);
     next if is_present($p2, $lineno);
-    $nationality = $fields[1];
+    $nationality = $fields[5];
     # $nationality = $pl_nat{$p1};
-    $strength = $fields[2];
+    $strength1 = $fields[6];
+    $strength2 = $fields[13];
     # $strength = $pl_str{$p1};
-    if (!$nationality || !$strength) {
+    if (!$nationality || !$strength1 || !$strength2) {
 	print STDERR "Line $lineno, player $p1, nationality or strength unknown\n";
 	next;
     }
@@ -84,6 +109,9 @@ while (<PAIRS>) {
     if ($#fields > 5) {
 	$f6 = $fields[6];
     }
+    #
+    # 2024 hack with obvious errors
+    # clean up!
     if (defined(f6) && $f6 =~ /Sitting/) {
     	print $grp = 3;
     }
@@ -110,11 +138,11 @@ while (<PAIRS>) {
 
     # $numstr = $fields[19];
     # Encode strength, weakest if unknown string
-    $numstr = 5;
-    $numstr = 1 if ($strength =~ /WORLD/);
-    $numstr = 2 if ($strength =~ /EXPERT/);
-    $numstr = 3 if ($strength =~ /STRONG/);
-    $numstr = 4 if ($strength =~ /ADVANCED/);
+    $numstr = avg_strength($strength1, $strength2);
+    # $numstr = 1 if ($strength =~ /WORLD/i);
+    # $numstr = 2 if ($strength =~ /EXPERT/i);
+    # $numstr = 3 if ($strength =~ /STRONG/i);
+    # $numstr = 4 if ($strength =~ /ADVANCED/i);
     $strengthdistr[$numstr]++;
     $natdistr{$nationality}++;
     print SEEDIN  "$p1-$p2,$grp,$numstr,$nationality\n";

@@ -1,4 +1,4 @@
-../seeding -w 22x13 2x4 <seedin
+../seeding -w 24x13 2x10 <seedin
 
 # Copy seeded groups randomized to grp files
 # the -R flag to sort randomizes
