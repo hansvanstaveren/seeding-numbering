@@ -1,7 +1,7 @@
 sub report {
 	my($tables, $str) = @_;
 
-	printf("%4s : %3d\n", $str, $tables);
+	printf("%4s: %3d\n", $str, $tables);
 }
 
 sub combine {
@@ -17,6 +17,7 @@ sub combine {
 	print outp "Pair	Tbl	As	M-ID\n";
 	while (<ns>) {
 	    $nsline = $_;
+	    # EW one pair short looks like correct, have to check
 	    $ewline = <ew>;
 	    chop $nsline;
 	    chop $ewline;
@@ -69,7 +70,7 @@ while (<COMBINFO>) {
 	my $t = combine("sectNS$sect.txt", "sectEW$sect.txt", "sect$sect.txt");
 	# system "perl combine.pl sectNS$sect.txt sectEW$sect.txt > sect$sect.txt";
 	system "rm sectNS$sect.txt sectEW$sect.txt";
-	report($t, "$sect  ");
+	report($t, $sect);
 	$total_tables += $t;
 }
 close COMBINFO;

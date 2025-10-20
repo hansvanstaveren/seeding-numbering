@@ -1,5 +1,6 @@
 #!perl -w
 
+#$pairsout=0;
 #
 # Groups for wheelchairs
 #
@@ -49,16 +50,18 @@ sub avg_strength {
     return (int(($ns1+$ns2)/2));
 }
 
-open (DEBUG, ">errors");
+open (ERRORS, ">errors");
 open (STATS, ">statistics");
 open (SEEDIN, ">seedin");
 
 #
 # Read and decode CSV version of registration spreadsheet
 #
-# BM#1;Country1;Standard1;BM#2;Country2;Standard2;Notes
+# Varies year after year ...
+#
 open(PAIRS, "pairs.csv") || die;
 $lineno = 0;
+$nerrors = 0;
 while (<PAIRS>) {
     $lineno++;
     # print "$lineno $_\n";
@@ -74,7 +77,8 @@ while (<PAIRS>) {
     # print "p1-p2 $p1-$p2\n";
     # print STDERR "line $lineno: $p1, $unused, $strength, $nationality, $p2\n";
     if ($p1 !~ /^[0-9]+$/ || $p2 !~ /^[0-9]+$/ || $p1 <= 0 || $p1 >=100000 || $p2 <= 0 || $p2 >= 100000) {
-	print DEBUG "Line $lineno: $_\n";
+	print ERRORS "Line $lineno: $_\n";
+	$nerrors++;
 	next;
     }
     next if is_present($p1, $lineno);
@@ -85,7 +89,8 @@ while (<PAIRS>) {
     $strength2 = $fields[13];
     # $strength = $pl_str{$p1};
     if (!$nationality || !$strength1 || !$strength2) {
-	print STDERR "Line $lineno, player $p1, nationality or strength unknown\n";
+	print ERRORS "Line $lineno, player $p1, nationality or strength unknown\n";
+	$nerrors++;
 	next;
     }
     # $wheelchair1 = $fields[17];
@@ -112,9 +117,9 @@ while (<PAIRS>) {
     #
     # 2024 hack with obvious errors
     # clean up!
-    if (defined(f6) && $f6 =~ /Sitting/) {
-    	print $grp = 3;
-    }
+    #if (defined(f6) && $f6 =~ /Sitting/) {
+    #print $grp = 3;
+    #}
     #if (defined($fields[6])) {
 	#if ($fields[6] =~ m/Sitting/)
 	    #$grp = 3;
@@ -136,22 +141,25 @@ while (<PAIRS>) {
 	}
     }
 
-    # $numstr = $fields[19];
-    # Encode strength, weakest if unknown string
     $numstr = avg_strength($strength1, $strength2);
-    # $numstr = 1 if ($strength =~ /WORLD/i);
-    # $numstr = 2 if ($strength =~ /EXPERT/i);
-    # $numstr = 3 if ($strength =~ /STRONG/i);
-    # $numstr = 4 if ($strength =~ /ADVANCED/i);
+
     $strengthdistr[$numstr]++;
     $natdistr{$nationality}++;
     print SEEDIN  "$p1-$p2,$grp,$numstr,$nationality\n";
+    $pairsout++;
 }
 close(PAIRS);
+
+if ($nerrors) {
+    print "There were $nerrors errors, see file errors!\n";
+}
 
 for $str (1..5) {
     print STATS "strength $str: ", $strengthdistr[$str], "\n";
 }
 foreach my $key (sort keys %natdistr) {
     print STATS "$key:" , $natdistr{$key} , "\n";
+}
+if ($pairsout%2 == 1) {
+	print "Odd number of pairs, add fake one for seeding!\n";
 }

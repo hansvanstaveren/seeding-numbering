@@ -1,4 +1,4 @@
 #
 # Set parameters for group sizing
 #
-../seeding -w 24x13 2x10 <seedin
+../seeding -w 24x13 10 9 <seedin
