@@ -1,13 +1,19 @@
+sub report {
+	my($tables, $str) = @_;
+
+	printf("%4s : %3d\n", $str, $tables);
+}
+
 sub combine {
 	my ($f1, $f2, $fout) = @_;
-	print "$f1, $f2 to $fout\n";
+	my ($tables);
+	# print "$f1, $f2 to $fout\n";
 
 	open ns, $f1 || die;
 	open ew, $f2 || die;
 	open outp, ">$fout" || die;
 
-	$nspairno=1;
-	$ewpairno=21;
+	$tables = 0;
 	print outp "Pair	Tbl	As	M-ID\n";
 	while (<ns>) {
 	    $nsline = $_;
@@ -22,14 +28,18 @@ sub combine {
 	    print outp "		South	$s\n";
 	    print outp "		East	$e\n";
 	    print outp "		West	$w\n";
+	    $tables++;
 	}
 	close ns;
 	close ew;
 	close outp;
+
+	return $tables;
 }
 
 open COMBINFO, "combinfo" || die "combinfo";
 
+$total_tables = 0;
 while (<COMBINFO>) {
 	next if (/^#/);
 	next if (/^ *$/);
@@ -56,8 +66,11 @@ while (<COMBINFO>) {
 		$ewfiles .= sprintf(" seeded%02d.txt", $num);
 	}
 	system "cat $ewfiles > sectEW$sect.txt";
-	combine("sectNS$sect.txt", "sectEW$sect.txt", "sect$sect.txt");
+	my $t = combine("sectNS$sect.txt", "sectEW$sect.txt", "sect$sect.txt");
 	# system "perl combine.pl sectNS$sect.txt sectEW$sect.txt > sect$sect.txt";
 	system "rm sectNS$sect.txt sectEW$sect.txt";
+	report($t, "$sect  ");
+	$total_tables += $t;
 }
 close COMBINFO;
+report($total_tables, "Tot");

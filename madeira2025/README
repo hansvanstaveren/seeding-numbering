@@ -1,6 +1,5 @@
-- Do not forget to use the new ../seeding, which is the combined version
-- ../seeding now splits the output into groups already, the scripts here (postsplit for example) have been updated for this, test for safeties sake
+- First extract.pl converting pairs.csv to seedin
+- Then set numbers in doseeding and run it
 - Don't forget the -w flag for seeding, to make the wheelchair stuff work
-- The sort -R is a sort shuffle
-- postsplit script is edited afterwards, not the one run in 2022
-- postsplit should be edited depending on number of groups
+- Edit the file combinfo that takes groups and combines into sections
+- postsplit.pl now does section making, using the combinfo file
