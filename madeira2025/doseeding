@@ -1,4 +1,17 @@
 #
 # Set parameters for group sizing
 #
-../seeding -w 24x13 10 9 <seedin
+grpsizes="24x13 10 9"
+
+totalentries=`wc -l <seedin`
+totalgroups=`echo $grpsizes | sed -e 's/  */+/g' -e 's/x/*/g'|bc`
+
+if [ $totalentries -eq $totalgroups ]
+then
+    echo Will seed $totalentries pairs
+    set $grpsizes
+    ../seeding -w $* <seedin
+else
+    echo entries $totalentries groups $totalgroups
+    echo mismatch!
+fi
