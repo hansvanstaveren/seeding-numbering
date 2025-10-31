@@ -5,9 +5,9 @@
 # Groups for wheelchairs
 #
 $wcgroup{0} = 0;
-$wcgroup{"B"} = 1;
-# $wcgroup{"C"} = 3;
-$wcgroup{"F"} = 9;
+$wcgroup{"A"} = 1;
+$wcgroup{"B"} = 3;
+$wcgroup{"C"} = 9;
 
 @strengthdistr = ( 0, 0, 0, 0, 0, 0);
 #
@@ -68,6 +68,13 @@ while (<PAIRS>) {
     next if /^BM/i;			# Header
     s/\r$//;
     chomp;
+    # Wheelchair hack
+    if (/;WC([A-Z]) */) {
+	$wheelchair = $1;
+	s/;WC[A-Z] */;/;
+    } else {
+	$wheelchair = 0;
+    }
     @fields = split /;/;
     # print @fields, "$#fields columns\n";
     # $id1 = $fields[0];
@@ -84,67 +91,25 @@ while (<PAIRS>) {
     next if is_present($p1, $lineno);
     next if is_present($p2, $lineno);
     $nationality = $fields[5];
-    # $nationality = $pl_nat{$p1};
     $strength1 = $fields[6];
     $strength2 = $fields[13];
-    # $strength = $pl_str{$p1};
     if (!$nationality || !$strength1 || !$strength2) {
 	print ERRORS "Line $lineno, player $p1, nationality or strength unknown\n";
 	$nerrors++;
 	next;
     }
-    # $wheelchair1 = $fields[17];
-    # $wheelchair2 = $fields[18];
-    # print STDERR "p1=$p1, p2=$p2, nationality=$nationality, strength=$strength, wc1=$wheelchair1, wc2=$wheelchair2\n";
 
-    # $grp1 = $wcgroup{$wheelchair1};
-    # $grp2 = $wcgroup{$wheelchair2};
-    # $grp1 = $grp2 = 0;
-
-    # print STDERR "grp1=$grp1, grp2=$grp2\n";
-
-    # if ($grp1 != 0 && $grp2 != 0 && $grp1 != $grp2) {
-	# print STDERR "Line $lineno, wheelchair clash\n";
-	# next;
-    # }
-    # print STDERR "Wheelchair $grp1 and $grp2\n";
-
-    $grp = 0;  $f6 = "";
-    # print "$#fields\n";
-    if ($#fields > 5) {
-	$f6 = $fields[6];
-    }
-    #
-    # 2024 hack with obvious errors
-    # clean up!
-    #if (defined(f6) && $f6 =~ /Sitting/) {
-    #print $grp = 3;
-    #}
-    #if (defined($fields[6])) {
-	#if ($fields[6] =~ m/Sitting/)
-	    #$grp = 3;
-    #}
+    $grp = $wheelchair ? $wcgroup{$wheelchair} : "" ;
 
     # Remove leading and trailing spaces from nationality field
     $nationality =~ s/^ +//;
     $nationality =~ s/ +$//;
 
-    if (0) {
-	# Compute group field, 0 except for "wheelchair"
-	$grp = 0;
-	if ($strength =~ /^WC([0-9]+)/) {
-	    $grp = $1;
-	}
-	if ($strength =~ /^WC([A-Za-z]+)/) {
-	    $grp = $wcgroup{$1};
-	    # print STDERR "WC$1 -> $grp\n";
-	}
-    }
-
     $numstr = avg_strength($strength1, $strength2);
 
     $strengthdistr[$numstr]++;
     $natdistr{$nationality}++;
+    $entwcgroup{$grp}++ if($wheelchair);
     print SEEDIN  "$p1-$p2,$grp,$numstr,$nationality\n";
     $pairsout++;
 }
@@ -159,6 +124,9 @@ for $str (1..5) {
 }
 foreach my $key (sort keys %natdistr) {
     print STATS "$key:" , $natdistr{$key} , "\n";
+}
+foreach my $key (sort keys %entwcgroup) {
+    print STATS "wheelchairs in group $key:" , $entwcgroup{$key} , "\n";
 }
 if ($pairsout%2 == 1) {
 	print "Odd number of pairs, add fake one for seeding!\n";
