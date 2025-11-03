@@ -5,9 +5,9 @@
 # Groups for wheelchairs
 #
 $wcgroup{0} = 0;
-$wcgroup{"A"} = 1;
-$wcgroup{"B"} = 3;
-$wcgroup{"C"} = 9;
+$wcgroup{"A"} = 3;
+$wcgroup{"B"} = 9;
+$wcgroup{"C"} = 19;
 
 @strengthdistr = ( 0, 0, 0, 0, 0, 0);
 #
