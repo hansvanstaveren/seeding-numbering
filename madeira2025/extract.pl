@@ -8,6 +8,7 @@ $wcgroup{0} = 0;
 $wcgroup{"A"} = 3;
 $wcgroup{"B"} = 9;
 $wcgroup{"C"} = 19;
+$wcgroup{"Z"} = 30;
 
 @strengthdistr = ( 0, 0, 0, 0, 0, 0);
 #
@@ -129,5 +130,5 @@ foreach my $key (sort keys %entwcgroup) {
     print STATS "wheelchairs in group $key:" , $entwcgroup{$key} , "\n";
 }
 if ($pairsout%2 == 1) {
-	print "Odd number of pairs, add fake one for seeding!\n";
+	print "Odd number of pairs, check for OK\n";
 }

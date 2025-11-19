@@ -1,7 +1,11 @@
 #
 # Set parameters for group sizing
 #
-grpsizes="28x13 4 3"
+
+#
+# 28 x 13 is 364
+#
+grpsizes="28x13 4x2"
 
 totalentries=`wc -l <seedin`
 totalgroups=`echo $grpsizes | sed -e 's/  */+/g' -e 's/x/*/g'|bc`
