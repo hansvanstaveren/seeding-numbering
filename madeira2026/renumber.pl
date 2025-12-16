@@ -1,6 +1,4 @@
 use List::Util qw(shuffle);
-use Data::Dumper;
-# @array = shuffle(@array);
 
 $defaultshuf="yes";
 
@@ -39,32 +37,27 @@ sub count_pairs {
     close($fh);
 }
 
+#
+# Read files of sections in previous session
+# Currently a maximum of 26 (A-Z)
+#
 sub read_previous {
 
     for $sect ('A'..'Z') {
 	if (-f "sect$sect.txt") {
-	    # print "Section $sect exists\n";
 	    count_pairs($sect, "sect$sect.txt");
 	}
     }
-}
-
-sub inputstatistics {
-
     for my $k (sort keys(%npairs)) {
-	my ($sect, $compass) = split /;/, $k;
-
 	my $np = $npairs{$k};
 	$totalpairs += $np;
-	if ($compass eq "EW") {
-	    $sect = lc($sect);
-	}
-	# print "Section $sect, direction $compass, $np pairs\n";
-	# print "$sect";
     }
     print "\nTotal pairs $totalpairs\n\n";
 }
 
+#
+# Make nice comma separated list of stuff like 1-4,6,8-13
+#
 sub canon_list {
     my ($elar) = @_;
 
@@ -83,20 +76,23 @@ sub canon_list {
     return join(',', @comar);
 }
 
+#
+# Expand stuff like ANS to ANS1-13
+# but the 1-13 stuff is changed to 1,2,3,...,12,13
+#
 sub expand {
-    my ($entry, $result) = @_;
+    my ($entry) = @_;
+    my ($result);
 
     if ($entry =~ /([A-Z])(NS|EW)(.*)/) {
-	$section = $1;
-	$direction = $2;
-	$members = $3;
+	my $section = $1;
+	my $direction = $2;
+	my $members = $3;
 	if (!$members) {
 	    $members = "1-" . $npairs{"$section;$direction"};
 	}
-	# print "expand $section$direction$members\n";
 	$members = canon_list($members);
 	$result = $section . $direction . $members;
-	# print "Matched $result\n";
     } else {
 	die "entry $entry unparsable";
     }
@@ -115,8 +111,9 @@ sub renumber {
     my ($sect_from, $dir_from, @list_from);
     my ($sect_to, $dir_to, @list_to);
 
-    my $pairsmapped = 0;
     print "Renumber from $from to $to with shuffling ", $shuf ? $shuf : "unspec", "\n";
+
+    my $pairsmapped = 0;
     if ($from =~ /([A-Z])(NS|EW)(.*)/) {
 	$sect_from = $1;
 	$dir_from = $2;
@@ -124,6 +121,7 @@ sub renumber {
     } else {
 	die "renumber from bad format";
     }
+
     if ($to =~ /([A-Z])(NS|EW)(.*)/) {
 	$sect_to = $1;
 	$dir_to = $2;
@@ -133,20 +131,17 @@ sub renumber {
     }
     if ($shuf eq "yes") {
 	@list_to = shuffle(@list_to);
-	# print "shuffled to @list_to\n";
     }
     if ($#list_from != $#list_to) {
 	maperror("from and to lists unequal size");
     }
-    # print "renumber $sect_from $dir_from to $sect_to $dir_to\n";
+
     foreach (0..$#list_from) {
 	$num_to = $list_to[$_];
 	$num_from = $list_from[$_];
 	#
 	# Check validity of numbers
 	#
-	# print "$num_to $sect_to $dir_to\n";
-	# print "$num_from $sect_from $dir_from\n";
 	if ($num_to < 1 || $num_to > $npairs{"$sect_to;$dir_to"}) {
 	    my $np = $npairs{"$sect_to;$dir_to"};
 	    maperror("$num_to not in range $sect_to $dir_to : $np");
@@ -160,7 +155,6 @@ sub renumber {
 	#
 	my $map_to = "$sect_to;$dir_to;$num_to";
 	my $map_from = "$sect_from;$dir_from;$num_from";
-	# print "map $map_from to $map_to\n";
 	if ($mapsource{$map_from}) {
 	    maperror("duplicate mapping from $map_from");
 	}
@@ -267,9 +261,7 @@ sub write_next {
 }
 
 read_previous();
-inputstatistics();
 
 do_mapping();
 
 write_next();
-# print Dumper(%pairmapping);
