@@ -8,6 +8,7 @@ $totalpairs = 0;
 
 sub count_pairs {
     my($letter, $file) = @_;
+    my($n,$s,$e,$w);
 
     $npairs{"$letter;NS"} = 0;
     $npairs{"$letter;EW"} = 0;
@@ -24,7 +25,6 @@ sub count_pairs {
 	    $ns = "$n-$s";
 	    $pn = ++$npairs{"$letter;NS"};
 	    $pairs{"$letter;NS;$pn"} = $ns;
-	    # print "$letter $pn NS $ns\n";
 	}
 	if (/.*East\s+([0-9]+)/) {
 	    $e = $1;
@@ -34,7 +34,6 @@ sub count_pairs {
 	    $ew = "$e-$w";
 	    $pn = ++$npairs{"$letter;EW"};
 	    $pairs{"$letter;EW;$pn"} = $ew;
-	    # print "$letter $pn EW $ew\n";
 	}
     }
     close($fh);
@@ -168,14 +167,20 @@ sub renumber {
 	if ($pairmapping{$map_to}) {
 	    maperror("duplicate mapping to $map_to");
 	}
+	#
+	# Mark pair as mapped, in case we miss something, just tack ! at end
+	#
+	$pairs{$map_from} .= "!";
+	#
+	# set mapping itself and count
+	#
 	$pairmapping{$map_to} = $map_from;
 	$pairsmapped++;
-	# $pairmapping{"$sect_to;$dir_to;$list_to[$_]"} = "$sect_from;$dir_from;$list_from[$_]";
     }
     return $pairsmapped;
 }
 
-sub read_mapping {
+sub do_mapping {
     my ($pairsmapped);
 
     $pairsmapped = 0;
@@ -199,12 +204,72 @@ sub read_mapping {
 	$pairsmapped += $pm;
     }
     close ($fh);
-    print "Totalpairs $totalpairs, mapped $pairsmapped\n";
+    if ($totalpairs != $pairsmapped) {
+	print "Totalpairs $totalpairs, mapped $pairsmapped\n";
+	#
+	# Which one did we miss, check ! at end of pair
+	#
+	while (my ($key, $value) = each(%pairs)) {
+	    next if ($value =~ /!$/);
+	    print "Pair $key not mapped\n";
+	}
+    }
+}
+
+sub checkdup {
+    my ($pn) = @_;
+
+    if ($alreadyhad{$pn}) {
+	die "$pn already output";
+    }
+    $alreadyhad{$pn} = 1;
+}
+
+sub write_next {
+
+    for my $letter ('A'..'Z') {
+	my ($n, $s, $e, $w);
+
+	# Use pairmapping to indirectly get pairs
+	# $pairmapping{$map_to} = $map_from;
+	next unless ($pairmapping{"$letter;NS;1"} && $pairmapping{"$letter;EW;1"});
+
+	open outp, ">nsect$letter.txt" || die;
+	print outp "Pair	Tbl	As	M-ID\n";
+	my $nspairs = $npairs{"$letter;NS"};
+	my $ewpairs = $npairs{"$letter;EW"};
+
+	print "Make new section $letter($nspairs,$ewpairs)\n";
+	if ($nspairs != $ewpairs) {
+	    die "NS unequal to EQ, not yet";
+	}
+	for my $pn (1..$nspairs) {
+	    $nsmap = $pairmapping{"$letter;NS;$pn"};
+	    $ewmap = $pairmapping{"$letter;EW;$pn"};
+	    $nspair = $pairs{$nsmap};
+	    $ewpair = $pairs{$ewmap};
+	    $nspair =~ /([0-9]+)\-([0-9]+)!/; $n = $1; $s = $2;
+	    $ewpair =~ /([0-9]+)\-([0-9]+)!/; $e = $1; $w = $2;
+
+	    checkdup($n);
+	    checkdup($s);
+	    checkdup($e);
+	    checkdup($w);
+	    # print "$pn $n $s  $e $w\n";
+
+	    print outp "		North	$n\n";
+	    print outp "		South	$s\n";
+	    print outp "		East	$e\n";
+	    print outp "		West	$w\n";
+	}
+	close outp;
+    }
 }
 
 read_previous();
 inputstatistics();
 
-read_mapping();
+do_mapping();
 
+write_next();
 # print Dumper(%pairmapping);
