@@ -174,14 +174,23 @@ sub renumber {
     return $pairsmapped;
 }
 
+sub dorenumber {
+    my ($lhs, $rhs) = @_;
+
+    my $lhsexp = expand($lhs);
+    my $rhsexp = expand($rhs);
+    return renumber($lhsexp, $rhsexp, $defaultshuf);
+}
+
 sub do_mapping {
-    my ($pairsmapped);
+    my ($pairsmapped, $pm);
 
     $pairsmapped = 0;
     open(my $fh, "<", "mapping.txt") || die "No mapping file";
     while (<$fh>) {
 	$mapline++;
 	next if /^#/;
+	chop;
 	if (/shuffle yes/) {
 	    $defaultshuf = "yes";
 	    next;
@@ -190,11 +199,27 @@ sub do_mapping {
 	    $defaultshuf = "no";
 	    next;
 	}
-	chop;
-	my ($lhs, $rhs, $shuf) = split;
-	my $lhsexp = expand($lhs);
-	my $rhsexp = expand($rhs);
-	my $pm = renumber($lhsexp, $rhsexp, $shuf ? $shuf : $defaultshuf);
+	if (/^rol/) {
+	    my @sections = split;
+	    shift @sections;
+	    push @sections, $sections[0];
+	    my $todo = $#sections;
+	    # print "todo $todo Rol @sections\n";
+	    while ($todo) {
+		# print "$sections[1] to $sections[0]\n";
+		$pm = dorenumber($sections[1], $sections[0]);
+		$pairsmapped += $pm;
+		$todo--;
+		shift @sections;
+	    }
+	    next;
+	}
+	my ($lhs, $rhs, $rest) = split;
+	if ($rest) {
+	    print "\"$_\" contains too many fields\n";
+	    next;
+	}
+	$pm = dorenumber($lhs, $rhs);
 	$pairsmapped += $pm;
     }
     close ($fh);
