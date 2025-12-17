@@ -210,6 +210,9 @@ sub do_mapping {
     }
 }
 
+#
+# Paranoia, make sure the same player does not get more than one seat
+#
 sub checkdup {
     my ($pn) = @_;
 
@@ -239,17 +242,20 @@ sub write_next {
 	}
 	for my $pn (1..$nspairs) {
 	    $nsmap = $pairmapping{"$letter;NS;$pn"};
-	    $ewmap = $pairmapping{"$letter;EW;$pn"};
 	    $nspair = $pairs{$nsmap};
-	    $ewpair = $pairs{$ewmap};
-	    $nspair =~ /([0-9]+)\-([0-9]+)!/; $n = $1; $s = $2;
-	    $ewpair =~ /([0-9]+)\-([0-9]+)!/; $e = $1; $w = $2;
-
+	    $nspair =~ /([0-9]+)\-([0-9]+)!/;
+	    $n = $1;
+	    $s = $2;
 	    checkdup($n);
 	    checkdup($s);
+
+	    $ewmap = $pairmapping{"$letter;EW;$pn"};
+	    $ewpair = $pairs{$ewmap};
+	    $ewpair =~ /([0-9]+)\-([0-9]+)!/;
+	    $e = $1;
+	    $w = $2;
 	    checkdup($e);
 	    checkdup($w);
-	    # print "$pn $n $s  $e $w\n";
 
 	    print outp "		North	$n\n";
 	    print outp "		South	$s\n";
@@ -260,8 +266,13 @@ sub write_next {
     }
 }
 
+#
+# Read previous session files
+#
+# Read and execute the mapping
+#
+# Write the files for next session
+#
 read_previous();
-
 do_mapping();
-
 write_next();
