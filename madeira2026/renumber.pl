@@ -214,6 +214,15 @@ sub do_mapping {
 	    }
 	    next;
 	}
+	if (/^stat/) {
+	    my @sections = split;
+	    shift @sections;
+	    for my $s (@sections) {
+		$pm = dorenumber($s, $s);
+		$pairsmapped += $pm;
+	    }
+	    next;
+	}
 	my ($lhs, $rhs, $rest) = split;
 	if ($rest) {
 	    print "\"$_\" contains too many fields\n";
