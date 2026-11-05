@@ -204,9 +204,9 @@ sub do_mapping {
 	    shift @sections;
 	    push @sections, $sections[0];
 	    my $todo = $#sections;
-	    # print "todo $todo Rol @sections\n";
+	    print "todo $todo Rol @sections\n";
 	    while ($todo) {
-		# print "$sections[1] to $sections[0]\n";
+		print "$sections[1] to $sections[0]\n";
 		$pm = dorenumber($sections[1], $sections[0]);
 		$pairsmapped += $pm;
 		$todo--;

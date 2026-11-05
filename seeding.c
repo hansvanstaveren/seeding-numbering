@@ -2,10 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
-#ifdef notdef
 #include <unistd.h>
-#endif
-#include <string.h>
 #include "seeding.h"
 #include "subr.h"
 
@@ -78,6 +75,9 @@ pairclass_dump()
 
 static char digits[] = "0123456789";
 
+/*
+ * Parse the 3x7 type construct
+ */
 void
 decode_xstring(char *str, int *number, int *size) {
     int numlen1, numlen2, endstr;
@@ -170,6 +170,9 @@ pair_lookup(char *id1, char *id2, int class)
     return prp;
 }
 
+/*
+ * Look up property, could be country or club, or anything
+ */
 pv_p
 prop_lookup(char *propname)
 {
@@ -181,6 +184,9 @@ prop_lookup(char *propname)
 	    return pvp;
 	}
     }
+    /*
+     * New property, allocate and set count to 1
+     */
     pvp = (pv_p) calloc(1, sizeof(pv_t));
     pvp->pv_string = string_copy(propname);
     pvp->pv_npairs = 1;
@@ -278,6 +284,7 @@ input_groupsize(FILE *f)
     }
 
     /*
+     * now the lines with groupsizes
      */
     for (i=0; i<totalgroups; i++) {
 	p = fgets(ibuf, sizeof(ibuf), f);
@@ -323,8 +330,11 @@ init_groups()
     pv_p pvp;
     double neuberg;
 
+    /*
+     * Algorithm works with extended groups of odd size
+     */
     if (largestgroup%2==0)
-	largestgroup++;
+	largestgroup++;		/* Make it odd */
     for(g=0; g<totalgroups; g++) {
 	size = grpsize[g];
 	npair += size;
